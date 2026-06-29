@@ -4,16 +4,14 @@ import json
 import re
 
 class DocumentManager():
-    def __init__(self, path_output:Path, path_vault:Path, output_name:str, path_data:Path):
+    def __init__(self, path_data:Path, path_vault:Path):
         # <<<
         # saída e entrada de dados
-        self.path_output = Path(path_output) / f"{output_name}.html"
-        self.path_vault = Path(path_vault)
+        self.path_vault = path_vault
         self.path_vault.mkdir(parents=True, exist_ok=True)
-        self.path_output.mkdir(parents=True, exist_ok=True)
 
         #capturando estado do json
-        self.path_data = Path(path_data)
+        self.path_data = path_data
         if self.path_data.exists():
             self.data = json.loads(self.path_data.read_text())
         else:
