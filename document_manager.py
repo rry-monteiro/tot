@@ -60,6 +60,7 @@ class DocumentManager():
         
     #resolve os paths dos links
     def _resolve_links_path(self, links_brutos:list, path_note:Path)->list:
+        # <<<
         dir_note = path_note.parent
         links = []
 
@@ -67,10 +68,12 @@ class DocumentManager():
             absolute_path = (dir_note / lk).resolve()
             relative_path = absolute_path.relative_to(self.path_vault)
             links.append(str(relative_path))
+        # >>>
         return links
 
     # pega todos os links e tags do documento
     def _get_links_and_tags(self, path_note:Path)->tuple:
+        # <<<
         # pega o conteúdo da nota
         conteudo = path_note.read_text(encoding="utf-8")
 
@@ -81,10 +84,12 @@ class DocumentManager():
         # devolve uma lista de tuplas com [] e ()
         m_links = self.RE_LINKS.findall(conteudo)
         links = self._resolve_links_path(m_links, path_note)
+        # >>>
         return tags, links
 
     # processa um arquivo quando é alterado
-    def _process_file_modified(self, path_note:Path)->None:
+    def _process_file(self, path_note:Path)->None:
+        # <<<
         new_hash = self._get_hash(path_note)
         new_mtime = path_note.stat().st_mtime
         tags, links = self._get_links_and_tags(path_note)
@@ -96,9 +101,11 @@ class DocumentManager():
             "tags" : tags,
             "links": links
         }
+        # >>>
 
     # ajusta o json de acordo com as mudanças (ou não)
     def run(self):
+        # <<<
         # capturo todas as notas do treco
         notes = self._get_notes()
         notes_set = {str(n) for n in notes}  # pra deleção ser O(1)
@@ -126,11 +133,11 @@ class DocumentManager():
                         self._update_mtime(n)
                     else:
                         """ARQUIVO MUDOU, TRATA PARSEANDO TUDO E JOGA NA MEMORIA"""
-                        self._process_file_modified(n)
+                        self._process_file(n)
                         self.has_changes=True
             else:
                 """ARQUIVO NOVO, TRATA"""
-                self._process_file_modified(n)
+                self._process_file(n)
                 self.has_changes=True
 
         self.path_data.write_text(
@@ -138,4 +145,5 @@ class DocumentManager():
             encoding="utf-8"
         )
 
+        # >>>
         return self.has_changes
