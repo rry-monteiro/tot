@@ -37,10 +37,14 @@ def main() -> None:
 
     # escolhas de tipo de grafo
     if args.links:
+        # GLinks.gen()
         pass
     elif args.tags:
+        # GTags.gen()
         pass
     elif args.all:
+        # GLinks.gen()
+        # GTags.gen()
         pass
 
 main()
