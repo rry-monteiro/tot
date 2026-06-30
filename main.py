@@ -3,12 +3,13 @@ from pathlib import Path
 from platformdirs import user_data_dir, user_documents_dir
 from document_manager import DocumentManager
 from g_tags import TagsGraphGenerator
-# from g_links import LinksGraphGenerator
+from g_links import LinksGraphGenerator
 
 #organizar os parsers
 def build_parser()->argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="tot — gerador de grafos de notas markdown")
     parser.add_argument("mode", choices=["links", "tags", "all"], help="tipo de grafo")
+    parser.add_argument("-f", "--force", action="store_true", help="ignora cache e regenera o gráfico")
     return parser
 
 # buscador de vault
@@ -38,7 +39,7 @@ def dm_changed(args: argparse.Namespace) -> bool:
 
 #comandos de geração
 def gen_tags(args:argparse.Namespace):
-    if not dm_changed(args):
+    if not args.force and not dm_changed(args):
         print("[~] info: nenhuma mudança detectada no vault")
         return
     tg = TagsGraphGenerator(args.output, args.data, args.vault)
@@ -46,12 +47,15 @@ def gen_tags(args:argparse.Namespace):
     print(f"[+] info: grafo de tags em {args.output}")
 
 def gen_links(args:argparse.Namespace):
-    if not dm_changed(args):
+    if not args.force and not dm_changed(args):
         print("[~] info: nenhuma mudança detectada no vault")
         return
+    lg = LinksGraphGenerator(args.output, args.data, args.vault)
+    lg.render()
+    print(f"[+] info: grafo de links em {args.output}")
 
 def gen_all(args:argparse.Namespace):
-    if not dm_changed(args):
+    if not args.force and not dm_changed(args):
         print("[~] info: nenhuma mudança detectada no vault")
         return
 
