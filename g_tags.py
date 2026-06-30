@@ -38,10 +38,12 @@ class TagsGraphGenerator():
                     "border": "#565f89",
                     "highlight": {"background": "#414868", "border": "#7aa2f7"}
                 },
-                "font": {"color": "#c0caf5", "size":15},
+                "font": {"color": "#c0caf5", "size":25},
                 "id": note,
                 "label": note, #nome do arquivo como nome do nó
-                "shape": "circle",
+                "shape": "box",
+                "widthConstraint": 110,
+                "heightConstraint": 110,
                 "title" : note
             })
             # pra cada tag em cada arquivo
@@ -56,7 +58,6 @@ class TagsGraphGenerator():
                         "hover": "#7aa2f7",
                         "opacity": 0.6
                     },
-                    "font": {"color": "#a9b1d6", "size": 12},
                     "from": note,
                     "to": tag_id,
                     "width": 6,

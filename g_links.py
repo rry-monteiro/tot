@@ -47,7 +47,6 @@ class LinksGraphGenerator():
 
             # itero nos liks de cada um (ja que os links são nodes)
             for node_link in dados["links"]:
-                print(node_link)
                 edges.append({
                     "color": {
                         "color": "#565f89",
@@ -55,7 +54,6 @@ class LinksGraphGenerator():
                         "hover": "#7aa2f7",
                         "opacity": 1
                     },
-                    "font": {"color": "#a9b1d6", "size": 12},
                     "from": note,
                     "to": node_link,
                     "arrows": {"to": {"enabled":True, "scaleFactor": 4, "type":"circle"} },
