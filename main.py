@@ -2,50 +2,65 @@ import argparse
 from pathlib import Path
 from platformdirs import user_data_dir, user_documents_dir
 from document_manager import DocumentManager
+# from g_tags import TagsGraphGenerator
+# from g_links import LinksGraphGenerator
 
 #organizar os parsers
 def build_parser()->argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="tot — gerador de grafos de notas markdown")
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("-l", "--links", action="store_true", help="Só grafo de links")
-    group.add_argument("-t", "--tags", action="store_true", help="Só grafo de tags")
-    group.add_argument("-a", "--all", action="store_true", help="Cria os dois tipos de grafo")
+    parser.add_argument("mode", choices=["links", "tags", "all"], help="tipo de grafo")
     return parser
 
-def find_vault():
-    documents = Path(user_documents_dir())
-    if not documents.exists():
-        print("[!] erro: a pasta Documentos não existe.")
+# buscador de vault
+def find_vault()->Path:
+    # <<<
+    #busca vault na pasta documentos
+    docs = Path(user_documents_dir())
+    if not docs.exists():
+        # docs não existe, erro
+        raise SystemExit("[!] erro: a pasta Documentos não existe.")
 
-    vaults = [p for p in documents.iterdir() if p.is_dir() and p.suffix == ".tot"]
-    
+    vaults = [p for p in docs.iterdir() if p.is_dir() and p.suffix == ".tot"]
+
     if len(vaults) > 1:
-        print("[!] erro: multiplos vaults encontrados")
-    elif not vaults:
-        print("[!] erro: nenhum vault encontrado, crie meu_vault.tot")
-    else:
-        return vaults[0]
+        # mais de um vault
+        raise SystemExit("[!] erro: múltiplos vaults encontrados")
+    if not vaults:
+        # nenhum vault
+        raise SystemExit("[!] erro: nenhum vault encontrado, crie meu_vault.tot")
+    # >>>
+    return vaults[0]
 
-def main() -> None:
-    find_vault()
-    # defaults
-    parser = build_parser()
-    args = parser.parse_args()
-    # caso não tenha args
-    if not (args.links or args.tags or args.all):
-        parser.error("Você precisa escolher um tipo de grafo. Use -l, -t ou -a")
+def dm_changed(args: argparse.Namespace) -> bool:
+    dm = DocumentManager(args.data, args.vault)
+    return dm.run()
 
-    # escolhas de tipo de grafo
-    if args.links:
-        # GLinks.gen()
-        pass
-    elif args.tags:
-        # GTags.gen()
-        pass
-    elif args.all:
-        # GLinks.gen()
-        # GTags.gen()
-        pass
+def gen_tags(args:argparse.Namespace):
+    return
+def gen_links(args:argparse.Namespace):
+    return
+def gen_all(args:argparse.Namespace):
+    return
 
-main()
+def main():
+    # <<<
+    # pegando args
+    parse = build_parser()
+    args = parse.parse_args()
+    # resolvendo vault
+    args.vault = find_vault()
+    # resolve paths
+    args.output = args.output or (Path(user_documents_dir()) / f"{args.vault.stem}.html")
+    Path(user_data_dir("tot")).mkdir(exist_ok=True, parents=True)
+    args.data = Path(user_data_dir("tot")) / f"{args.vault.stem}.json"
+
+    # escolha de modo
+    match args.mode:
+        case "links":
+            gen_links(args)
+        case "tags":
+            gen_tags(args)
+        case "all":
+            gen_all(args)
+    # >>>
 
