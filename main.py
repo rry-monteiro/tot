@@ -2,7 +2,7 @@ import argparse
 from pathlib import Path
 from platformdirs import user_data_dir, user_documents_dir
 from document_manager import DocumentManager
-# from g_tags import TagsGraphGenerator
+from g_tags import TagsGraphGenerator
 # from g_links import LinksGraphGenerator
 
 #organizar os parsers
@@ -31,16 +31,29 @@ def find_vault()->Path:
     # >>>
     return vaults[0]
 
+# função pra ver se o vault mudou
 def dm_changed(args: argparse.Namespace) -> bool:
     dm = DocumentManager(args.data, args.vault)
     return dm.run()
 
+#comandos de geração
 def gen_tags(args:argparse.Namespace):
-    return
+    if not dm_changed(args):
+        print("[~] info: nenhuma mudança detectada no vault")
+        return
+    tg = TagsGraphGenerator(args.output, args.data, args.vault)
+    tg.render()
+    print(f"[+] info: grafo de tags em {args.output}")
+
 def gen_links(args:argparse.Namespace):
-    return
+    if not dm_changed(args):
+        print("[~] info: nenhuma mudança detectada no vault")
+        return
+
 def gen_all(args:argparse.Namespace):
-    return
+    if not dm_changed(args):
+        print("[~] info: nenhuma mudança detectada no vault")
+        return
 
 def main():
     # <<<
@@ -50,9 +63,9 @@ def main():
     # resolvendo vault
     args.vault = find_vault()
     # resolve paths
-    args.output = args.output or (Path(user_documents_dir()) / f"{args.vault.stem}.html")
+    args.output = (Path(user_documents_dir()) / f"{args.vault.name}.html")
     Path(user_data_dir("tot")).mkdir(exist_ok=True, parents=True)
-    args.data = Path(user_data_dir("tot")) / f"{args.vault.stem}.json"
+    args.data = Path(user_data_dir("tot")) / f"{args.vault.name}.json"
 
     # escolha de modo
     match args.mode:
@@ -64,3 +77,5 @@ def main():
             gen_all(args)
     # >>>
 
+if __name__ == "__main__":
+    main()
