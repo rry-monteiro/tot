@@ -9,6 +9,7 @@ class TagsGraphGenerator():
         self.path_vault = Path(path_vault)
 
     def _build(self):
+        # <<<
         # salvo os arquivos
         arquivos = self.data["arquivos"]
         # defino a lsiat de nodes para notas
@@ -94,6 +95,7 @@ class TagsGraphGenerator():
                     tag_nodes[tag]["font"]["size"] = tag_nodes[tag]["value"] * 6
 
         # retorna as listas
+        # >>>
         return nodes, edges
 
     def render(self):
