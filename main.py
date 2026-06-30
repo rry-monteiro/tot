@@ -42,22 +42,27 @@ def gen_tags(args:argparse.Namespace):
     if not args.force and not dm_changed(args):
         print("[~] info: nenhuma mudança detectada no vault")
         return
-    tg = TagsGraphGenerator(args.output, args.data, args.vault)
+    tg = TagsGraphGenerator(args.output_tags, args.data, args.vault)
     tg.render()
-    print(f"[+] info: grafo de tags em {args.output}")
+    print(f"[+] info: grafo de tags em {args.output_tags}")
 
 def gen_links(args:argparse.Namespace):
     if not args.force and not dm_changed(args):
         print("[~] info: nenhuma mudança detectada no vault")
         return
-    lg = LinksGraphGenerator(args.output, args.data, args.vault)
+    lg = LinksGraphGenerator(args.output_links, args.data, args.vault)
     lg.render()
-    print(f"[+] info: grafo de links em {args.output}")
+    print(f"[+] info: grafo de links em {args.output_links}")
 
 def gen_all(args:argparse.Namespace):
     if not args.force and not dm_changed(args):
         print("[~] info: nenhuma mudança detectada no vault")
         return
+    tg = TagsGraphGenerator(args.output_tags, args.data, args.vault)
+    tg.render()
+    lg = LinksGraphGenerator(args.output_links, args.data, args.vault)
+    lg.render()
+    print(f"[+] info: dois grafos gerados em {args.output_links} e {args.output_tags}")
 
 def main():
     # <<<
@@ -66,8 +71,9 @@ def main():
     args = parse.parse_args()
     # resolvendo vault
     args.vault = find_vault()
-    # resolve paths
-    args.output = (Path(user_documents_dir()) / f"{args.vault.name}.html")
+    # resolve paths (links e tags)
+    args.output_links = (Path(user_documents_dir()) / f"{args.vault.name}.links.html")
+    args.output_tags = (Path(user_documents_dir()) / f"{args.vault.name}.tags.html")
     Path(user_data_dir("tot")).mkdir(exist_ok=True, parents=True)
     args.data = Path(user_data_dir("tot")) / f"{args.vault.name}.json"
 
