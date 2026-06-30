@@ -116,7 +116,7 @@ class DocumentManager():
         # itero nas notas
         for n in notes:
             # verifico a existencia no json
-            if n.relative_to(self.path_vault) in list(self.data["arquivos"].keys()):
+            if str(n.relative_to(self.path_vault)) in list(self.data["arquivos"].keys()):
                 """ARQUIVO EXISTENTE, VERIFICA ALTERAÇÃO"""
                 # se ele existe, verifica o mtime e compara
                 if self._mtime_is_equal(n):
