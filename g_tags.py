@@ -65,7 +65,7 @@ class TagsGraphGenerator():
                     # cria o ponteiro de nodes
                     tag_nodes[tag] = {
                         "color": {"background": "#7aa2f7"},
-                        "font": {"color": "#c0caf5", "size": 5},
+                        "font": {"color": "#c0caf5", "size": 45},
                         "id": tag_id,
                         "label": tag_id,
                         "shape": "dot",
@@ -85,13 +85,13 @@ class TagsGraphGenerator():
                             "color": "#565f89",
                             "highlight": "#7dcfff",
                             "hover": "#7aa2f7",
-                            "opacity": 0.7
+                            "opacity": 0.8
                         },
                     })
                 # se ja passamos por ela, aumenta seu valor no ponteiro
                 else:
                     tag_nodes[tag]["value"] += 1.5
-                    tag_nodes[tag]["font"]["size"] = tag_nodes[tag]["value"] * 5
+                    tag_nodes[tag]["font"]["size"] = tag_nodes[tag]["value"] * 6
 
         # retorna as listas
         return nodes, edges
