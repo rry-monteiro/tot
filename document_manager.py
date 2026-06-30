@@ -23,7 +23,6 @@ class DocumentManager():
 
         # flag de mudanças
         self.has_changes=False
-        self.has_only_json_changes=False
         # >>>
 
     # captura a lista de todas as notas no vault
