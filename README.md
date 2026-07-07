@@ -82,6 +82,10 @@ Seu aruivo html será criado em `~/Documentos/nome_do_seu_vault.tot.<modo>.html`
 3. **Geração de HTML** — os geradores montam a estrutura de nós/arestas e injetam no template vis-network. Nenhum html é gerado do zero, o template está embutido nos arquivos em `nethtml.py`. A ideia é economizar tempo com a geração do gráfico.
 4. **Física** — Os nós no gráfico fazem de tudo pra não se esbarrar, chega a ser um pouco difícil tornar o gráfico bagunçado. Caso queira ver como foi ajustada a física, abra `nethtml.py`
 
+## Próximos ajustes
+- mudança de nomes ou caminhos no vault: quando move um arquivo, da problema, ainda tem que ajustar isso adiiconando o inode de cada arquivo no json, não fica pesado e nem tenho que comparar conteúdo.
+- vizualiação da nota: quero adicionar vizualização da nota com click duplo no grafo, assim da pra olhar rápido a nota sem editor extra, a ideia é renderizar direto no navegador.
+
 --- 
 ## sobre
 ### Ideia:
