@@ -42,7 +42,7 @@ class LinksGraphGenerator():
                 "widthConstraint" : 250,
                 "heightConstraint" : 250,
                 "title" : note,
-                "mass" : len(dados["links"])*1.5
+                "mass" : len(dados["links"])*3
             })
 
             # itero nos liks de cada um (ja que os links são nodes)

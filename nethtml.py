@@ -23,8 +23,8 @@ HTML_TEMPLATE = \
         var options = {
             "nodes": {
                 "scaling": {
-                    "min": 40,
-                    "max": 220
+                    "min": 90,
+                    "max": 310
                 }
             },
             "edges": {
@@ -38,8 +38,8 @@ HTML_TEMPLATE = \
                 "enabled": true,
                 "solver": "forceAtlas2Based",
                 "forceAtlas2Based": {
-                    "gravitationalConstant": -571,
-                    "centralGravity": 0.01,
+                    "gravitationalConstant": -600,
+                    "centralGravity": 0.005,
                     "springLength": 300,
                     "springConstant": 0.02,
                     "damping": 0.999999,

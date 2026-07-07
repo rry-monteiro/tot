@@ -16,17 +16,8 @@ class TagsGraphGenerator():
         nodes = []
         edges = []
         tag_nodes = {} #ponteiro
+        mass_center = 0 #massa do centro
 
-        # central
-        nodes.append({
-            "id": "__center__",
-            "shape": "dot",
-            "size": 0,
-            "mass": 30,
-            "fixed": True,
-            "x": 0,
-            "y": 0
-        })
 
         # nodes
         # loop nos dados
@@ -44,8 +35,11 @@ class TagsGraphGenerator():
                 "shape": "box",
                 "widthConstraint": 110,
                 "heightConstraint": 110,
-                "title" : note
+                "title" : note,
+                "mass" : 2
             })
+            if nodes[len(nodes)-1]["mass"] == 2:
+                mass_center+=1
             # pra cada tag em cada arquivo
             for tag in dados["tags"]:
                 # define o id
@@ -56,11 +50,11 @@ class TagsGraphGenerator():
                         "color": "#565f89",
                         "highlight": "#7dcfff",
                         "hover": "#7aa2f7",
-                        "opacity": 0.6
+                        "opacity": .7
                     },
                     "from": note,
                     "to": tag_id,
-                    "width": 6,
+                    "width": 8,
                 })
                 # se não passamos pela tag ainda, ela é nova, adiciona no ponteiro
                 if tag not in tag_nodes:
@@ -82,18 +76,29 @@ class TagsGraphGenerator():
                     edges.append({
                         "from": "__center__",
                         "to": tag_id,
-                        "width": 10,
+                        "width": 0,
                         "color": {
                             "color": "#565f89",
                             "highlight": "#7dcfff",
                             "hover": "#7aa2f7",
-                            "opacity": 0.8
+                            "opacity": 1
                         },
                     })
                 # se ja passamos por ela, aumenta seu valor no ponteiro
                 else:
                     tag_nodes[tag]["value"] += 1.5
-                    tag_nodes[tag]["font"]["size"] = tag_nodes[tag]["value"] * 6
+                    tag_nodes[tag]["font"]["size"] = tag_nodes[tag]["value"] * 10
+
+        # central
+        nodes.append({
+            "id": "__center__",
+            "shape": "dot",
+            "size": 0,
+            "mass": mass_center+20,
+            "fixed": True,
+            "x": 0,
+            "y": 0
+        })
 
         # retorna as listas
         # >>>
