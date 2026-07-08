@@ -77,17 +77,19 @@ Seu aruivo html será criado em `~/Documentos/nome_do_seu_vault.tot.<modo>.html`
 ---
 ## Como funciona por baixo
 
-1. **Cache inteligente** — DocumentManager mantem um JSON com dados (mtime, hash Blake2b, tags, links) de cada aruqivo no vault, quando recebe um comando, verifica se o mtime mudou, caso mude, calcula o hash do arquivo, caso ele tenha mudado, só aí varre o documento com regex. A etapa do mtime é pra não calcular hash todas as vezes.
+1. **Cache inteligente** — DocumentManager mantem um JSON com dados (mtime, hash Blake2b, tags, links) de cada aruqivo no vault, quando recebe um comando, verifica se o mtime mudou, caso mude, calcula o hash do arquivo, caso ele tenha mudado, só aí varre o documento com regex. A etapa do mtime é pra não calcular hash todas as vezes. Além disso, decidi que não ia construir o json toda vez que iterasse no vault por velocidade (e curiosidade) mesmo, de acordo com testes, reconstruir o json sempre se torna ~10% mais lento que deletar e alterar o json, com milhares de notas, mesmo que seja difícil, da pra perceber.
 2. **Regex leve** — extrai tags e links com padrões pré-compilados, sem parser Markdown pesado, sem fazer isso sempre que for gerar um gráfico.
 3. **Geração de HTML** — os geradores montam a estrutura de nós/arestas e injetam no template vis-network. Nenhum html é gerado do zero, o template está embutido nos arquivos em `nethtml.py`. A ideia é economizar tempo com a geração do gráfico.
-4. **Física** — Os nós no gráfico fazem de tudo pra não se esbarrar, chega a ser um pouco difícil tornar o gráfico bagunçado. Caso queira ver como foi ajustada a física, abra `nethtml.py`
+4. **Física** — Os nós no gráfico fazem de tudo pra não se esbarrar, chega a ser um pouco difícil tornar o gráfico bagunçado. Caso queira ver como foi ajustada a física, abra `nethtml.py`. Ainda não sei como isso se comporta com milhares ou centenas de notas, cheguei a algumas dezenas no meu vault e continua tranquilo.
 
+---
 ## Próximos ajustes
 - mudança de nomes ou caminhos no vault: quando move um arquivo, da problema, ainda tem que ajustar isso adiiconando o inode de cada arquivo no json, não fica pesado e nem tenho que comparar conteúdo.
 - vizualiação da nota: quero adicionar vizualização da nota com click duplo no grafo, assim da pra olhar rápido a nota sem editor extra, a ideia é renderizar direto no navegador.
+- vault gigante: pretendo usar outro framework pra gerar o grafo, vis-network pode não se comportar bem com muitos nodes e arestas, mesmo que um vault pessoal chegue a algumas centenas de notas no máximo, não tenho noção de como a física se comportaria, pretendo mudar pra algo que permita física individual dos nodes.
 
 --- 
-## sobre
+## Sobre
 ### Ideia:
 A ideia de criar o tot surgiu do [Obsidian](https://obsidian.md/), a ideia inicial era fazer um gráfico apenas de frases que se conectam por chaves (usando a sintaxe do obsidan `[[arquivo]]`) para estudo, acabei percebendo que papel e caneta me ajudaria mais nisso e resolvi esquecer (depois de pronto). Depois de um tempo comecei a me interssar mais pelo pyvis e percebi que podia sair algo muito bom de lá, então comecei outra vez.
 ### Thoth:
