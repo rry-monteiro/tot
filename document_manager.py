@@ -89,58 +89,73 @@ class DocumentManager():
         # <<<
         new_hash = self._get_hash(path_note)
         new_mtime = path_note.stat().st_mtime
+        new_inode = f"{path_note.stat().st_dev}:{path_note.stat().st_ino}"
         tags, links = self._get_links_and_tags(path_note)
         
         self.data["arquivos"][str(path_note.relative_to(self.path_vault))] = \
         {
             "mtime" : new_mtime,
             "hash" : new_hash,
+            "inode": new_inode,
             "tags" : tags,
             "links": links
         }
         # >>>
 
-    # ajusta o json de acordo com as mudanças (ou não)
     def run(self):
-        # <<<
-        # capturo todas as notas do treco
+        # todas as notas em path
         notes = self._get_notes()
-        notes_set = {str(n) for n in notes}  # pra deleção ser O(1)
+        # mapeia inode -> path pelo vault pra deleção e detctar mudança de path
+        map_inode_vault = {f"{note.stat().st_dev}:{note.stat().st_ino}" : str(note.relative_to(self.path_vault)) for note in notes}
+        # mapeia o redirecionamento: antigo -> novo pra editar o "arquivos" depois
 
-        # deleto as notas apagadas
-        for note in list(self.data["arquivos"].keys()):
-            if str(self.path_vault / note) not in notes_set:
-                del self.data["arquivos"][note]
+        # itero no json
+        for n in list(self.data["arquivos"].keys()):
+            # verifico se o inode do existe no map
+            inode = self.data["arquivos"][n]["inode"]
+            
+            if inode not in map_inode_vault:
+                # ta no json mas não ta n vault = DELETADO
+                del self.data["arquivos"][n]
                 self.has_changes = True
+                
+            elif map_inode_vault[inode] != n:
+                # nome do map não é o mesmo nome do json = MOVIDO
+                novo_path = map_inode_vault[inode]
+                # puxo tudo do original
+                self.data["arquivos"][novo_path] = self.data["arquivos"][n]
+                # deleto o original
+                del self.data["arquivos"][n]
 
-        # itero nas notas
+        # iterando nas notas do vault
         for n in notes:
-            # verifico a existencia no json
-            if str(n.relative_to(self.path_vault)) in list(self.data["arquivos"].keys()):
-                """ARQUIVO EXISTENTE, VERIFICA ALTERAÇÃO"""
-                # se ele existe, verifica o mtime e compara
+            # verificando existencia no json:
+            if str(n.relative_to(self.path_vault)) not in list(self.data["arquivos"].keys()):
+                # não existe, é novo:
+                self._process_file(n)
+                self.has_changes = True
+            else:
+                # existe, verifica alterações por blocos
+                # MTIME
                 if self._mtime_is_equal(n):
-                    """ARQUIVO INTACTO"""
+                    # mtime nomral, pula
                     continue
                 else:
-                    """POSSIVEL MUDANÇA NO HASH"""
-                    # se mudou o mtime, temos certeza validando o hash
+                    #mtime diferente, bloco 2
+                    # HASH
                     if self._hash_is_equal(n):
-                        """ARQUIVO REALMENTE INTACTO, ATUALIZA SÓ O MTIME NA MEMORIA"""
+                        # hash ta igual, atualiza só o mtime
                         self._update_mtime(n)
                     else:
-                        """ARQUIVO MUDOU, TRATA PARSEANDO TUDO E JOGA NA MEMORIA"""
+                        # hash mudou, parseia o arquivo
                         self._process_file(n)
-                        self.has_changes=True
-            else:
-                """ARQUIVO NOVO, TRATA"""
-                self._process_file(n)
-                self.has_changes=True
+                        self.has_changes = True
 
+        # salva o treco
+        # indentação atrasa mas é pra ficar legivel
         self.path_data.write_text(
-            json.dumps(self.data, indent=4, ensure_ascii=False),
+            json.dumps(self.data, indent=2, ensure_ascii=False),
             encoding="utf-8"
         )
 
-        # >>>
         return self.has_changes
