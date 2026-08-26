@@ -84,9 +84,10 @@ Seu aruivo html será criado em `~/Documentos/nome_do_seu_vault.tot.<modo>.html`
 5. **Sync** — As notas são sincronizadas como o json e o json com as notas, qunaod há mudança nos caminhos do vault, isso é detectado usando o inode dos arquivos e sincronizado de forma automática editando as notas com regex, assim o usuário não se preocupa em editar um link toda vez que mover um arquivo ou alterar um nome dentro do vault. 
 ---
 ## Próximos ajustes
-- [x] mudança de nomes ou caminhos no vault: quando move um arquivo, da problema, ainda tem que ajustar isso adiiconando o inode de cada arquivo no json, não fica pesado e nem tenho que comparar conteúdo.
-- [ ] vizualiação da nota: quero adicionar vizualização da nota com click duplo no grafo, assim da pra olhar rápido a nota sem editor extra, a ideia é renderizar direto no navegador.
-- [ ] vault gigante: pretendo usar outro framework pra gerar o grafo, vis-network pode não se comportar bem com muitos nodes e arestas, mesmo que um vault pessoal chegue a algumas centenas de notas no máximo, não tenho noção de como a física se comportaria, pretendo mudar pra algo que permita física individual dos nodes.
+- [x] Mudança de nomes ou caminhos no vault: quando move um arquivo, da problema, ainda tem que ajustar isso adiiconando o inode de cada arquivo no json, não fica pesado e nem tenho que comparar conteúdo.
+- [ ] Métricas: pretendo adicionar um comando que permita visualizar as métricas do vault, porcentagem de uso de tags, uso de links, quantidade de arquivos por pasta, o maximo de infomação possível.
+- [ ] Vizualiação da nota: quero adicionar vizualização da nota com click duplo no grafo, assim da pra olhar rápido a nota sem editor extra, a ideia é renderizar direto no navegador.
+- [ ] Vault gigante: pretendo usar outro framework pra gerar o grafo, vis-network pode não se comportar bem com muitos nodes e arestas, mesmo que um vault pessoal chegue a algumas centenas de notas no máximo, não tenho noção de como a física se comportaria, pretendo mudar pra algo que permita física individual dos nodes.
 
 --- 
 ## Sobre
