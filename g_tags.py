@@ -38,8 +38,8 @@ class TagsGraphGenerator():
                 "title" : note,
                 "mass" : 2
             })
-            if nodes[len(nodes)-1]["mass"] == 2:
-                mass_center+=1
+            # if nodes[len(nodes)-1]["mass"] == 2:
+            #     mass_center+=1
             # pra cada tag em cada arquivo
             for tag in dados["tags"]:
                 # define o id

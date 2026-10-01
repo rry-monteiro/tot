@@ -3,7 +3,7 @@ from hashlib import blake2b
 import json
 import re
 
-class DocumentManager():
+class DocumentManager:
     def __init__(self, path_data:Path, path_vault:Path):
         # <<<
         # saída e entrada de dados
@@ -27,7 +27,7 @@ class DocumentManager():
 
     # captura a lista de todas as notas no vault
     def _get_notes(self)->list:
-        return list(Path(self.path_vault).rglob("*.md"))
+        return list(self.path_vault).rglob("*.md")
 
     # pega o hash de um arquivo
     def _get_hash(self, path_note:Path)->str:
@@ -45,7 +45,7 @@ class DocumentManager():
         hash_atual = self._get_hash(path_note)
         hash_json = self.data["arquivos"][str(path_note.relative_to(self.path_vault))]["hash"]
         # >>>
-        return True if hash_atual == hash_json else False
+        return hash_atual == hash_json
 
     # compara o mtime atual com o do json
     def _mtime_is_equal(self, path_note:Path)->bool:
@@ -53,7 +53,7 @@ class DocumentManager():
         mtime_atual = path_note.stat().st_mtime
         mtime_json = self.data["arquivos"][str(path_note.relative_to(self.path_vault))]["mtime"]
         # >>>
-        return True if mtime_atual == mtime_json else False
+        return mtime_atual == mtime_json
 
     # atualiza o mtime dentro do json
     def _update_mtime(self, path_note:Path)->None:
@@ -83,7 +83,7 @@ class DocumentManager():
 
         # devolve uma lista de strings não prontas
         m_tags = self.RE_TAGS.findall(conteudo)
-        tags = [t.strip() for grupo in m_tags for t in grupo.split(",") if t.strip()]
+        tags = [tag for grupo in m_tags for item in grupo.split(",") if (tag := item.strip())]
 
         # devolve uma lista de tuplas com [] e ()
         m_links = self.RE_LINKS.findall(conteudo)
@@ -178,7 +178,7 @@ class DocumentManager():
                     # tenta achar o relativo, se falhar o usuário escreveu abobrinha no link
                     try:
                         rel = str((path.parent / raw).resolve().relative_to(self.path_vault))
-                    except:
+                    except ValueError:
                         # se o user esccreveu abobrinnha, pula
                         continue
                     
