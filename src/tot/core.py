@@ -40,21 +40,23 @@ def scan() -> dict:
     scaneia o vault por completo e devolve a estrutura base dos graficos de tags e notas
     """
     assert VAULT is not None
-    notes = get_notes(VAULT, relative=False)
+    notes = get_notes(relative=False)
     with ThreadPoolExecutor(max_workers=15) as executor:
         files = dict(executor.map(parser, notes))
 
     return {"files": files}
 
 
-def get_notes(path_vault: Path, relative: bool) -> list:
+def get_notes(relative: bool) -> list:
     """
     Recebe o path do vault e devolve a lista de arquivos
     """
+    assert VAULT is not None
+
     if relative:
-        return [nota.relative_to(path_vault) for nota in path_vault.rglob("*.md")]
+        return [nota.relative_to(VAULT) for nota in VAULT.rglob("*.md")]
     else:
-        return list(path_vault.rglob("*.md"))
+        return list(VAULT.rglob("*.md"))
 
 
 def get_vault() -> Path:
