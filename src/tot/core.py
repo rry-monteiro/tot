@@ -1,18 +1,61 @@
+import re
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from platformdirs import user_documents_dir
 
+VAULT: Path | None = None
+REGEX_TAGS = re.compile(r"tags:\s*\[([^\]]*)\]")
+REGEX_LINKS = re.compile(r'\[[^\]]+\]\(([^)#\s"]+\.md)')
 
-def scan(path_vault:Path):
-    ...
 
-def get_notes(path_vault: Path) -> list:
+def parser(file: Path) -> tuple:
+    """
+    passa o regex capturando links e tags do arquivo
+    """
+    assert VAULT is not None
+
+    text = file.read_text()
+
+    # tags
+    str_tags = REGEX_TAGS.findall(text)
+    tags = [
+        tag for grupo in str_tags for item in grupo.split(",") if (tag := item.strip())
+    ]
+
+    # links
+    brute_links = REGEX_LINKS.findall(text)
+    links = []
+
+    for link in brute_links:
+        absolute = (file.parent / link).resolve()
+        relative = absolute.relative_to(VAULT)
+        links.append(str(relative))
+
+    return str(file.relative_to(VAULT)), {"tags": tags, "links": links}
+
+
+def scan() -> dict:
+    """
+    scaneia o vault por completo e devolve a estrutura base dos graficos de tags e notas
+    """
+    assert VAULT is not None
+    notes = get_notes(VAULT, relative=False)
+    with ThreadPoolExecutor(max_workers=15) as executor:
+        files = dict(executor.map(parser, notes))
+
+    return {"files": files}
+
+
+def get_notes(path_vault: Path, relative: bool) -> list:
     """
     Recebe o path do vault e devolve a lista de arquivos
     """
-    return [nota.relative_to(path_vault) for nota in path_vault.rglob("*.md")]
-    # return list(path_vault.rglob("*.md"))
-    
+    if relative:
+        return [nota.relative_to(path_vault) for nota in path_vault.rglob("*.md")]
+    else:
+        return list(path_vault.rglob("*.md"))
+
 
 def get_vault() -> Path:
     """
@@ -35,6 +78,3 @@ def get_vault() -> Path:
             "erro: nenhum vault encontrado, crie 'Documentos/meu_vault.tot/'"
         )
     return vaults[0]
-
-
-
