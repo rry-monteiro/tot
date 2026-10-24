@@ -1,3 +1,4 @@
+import hashlib
 import re
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -9,13 +10,21 @@ REGEX_TAGS = re.compile(r"tags:\s*\[([^\]]*)\]")
 REGEX_LINKS = re.compile(r'\[[^\]]+\]\(([^)#\s"]+\.md)')
 
 
+def hash_is_equal(files: dict, old_relative_path: str, new_path: str):
+    texto = Path(new_path).read_text(encoding="utf-8", errors="replace")
+    h_novo = hashlib.blake2b(texto.encode(), digest_size=16).hexdigest()
+    return files[old_relative_path]["hash"] == h_novo
+
+
 def parser(file: Path) -> tuple:
     """
-    passa o regex capturando links e tags do arquivo
+    passa o regex capturando links e tags do arquivo, calcula o hash
     """
     assert VAULT is not None
 
-    text = file.read_text()
+    text = file.read_text(encoding="utf-8", errors="replace")
+
+    h = hashlib.blake2b(text.encode(), digest_size=16).hexdigest()
 
     # tags
     str_tags = REGEX_TAGS.findall(text)
@@ -32,7 +41,7 @@ def parser(file: Path) -> tuple:
         relative = absolute.relative_to(VAULT)
         links.append(str(relative))
 
-    return str(file.relative_to(VAULT)), {"tags": tags, "links": links}
+    return str(file.relative_to(VAULT)), {"tags": tags, "links": links, "hash": h}
 
 
 def scan() -> dict:

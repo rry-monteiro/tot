@@ -64,7 +64,31 @@ def run():
     vault = core.VAULT
     files = core.scan()["files"]
 
+    def rel(p) -> str:
+        return str(Path(p).relative_to(vault))
+
     for mud in watch(vault, watch_filter=lambda _, p: p.lower().endswith(".md")):
+        # capturando deleções e adições do vault
+        deleted = [p for t, p in mud if t == Change.deleted]
+        added = [p for t, p in mud if t == Change.added]
+
+        # se os dois existirem na mesma "linha"
+        if len(deleted) == 1 and len(added) == 1:
+            # captura o antigo (detelado) e o novo (adicinado)
+            old, new = rel(deleted[0]), rel(added[0])
+            # se o antigo existe no vault serializado e o hash dos dois é igual
+                # movimentação de arquivo
+            if old in files and core.hash_is_equal(files, old, added[0]):
+                # parseia o arquivo
+                files[new] = core.parser(Path(added[0]))[1]
+                # remove o antigo
+                del files[old]
+                # transforma tudo em novo
+                for info in files.values():
+                    info["links"] = [new if l == old else l for l in info["links"]]
+                # proxima mudança
+                continue
+
         for tipo, arquivo in mud:
             if tipo in (Change.added, Change.modified):
                 try:
@@ -73,4 +97,7 @@ def run():
                     continue
                 files[chave] = info
             elif tipo == Change.deleted:
-                files.pop(str(Path(arquivo).relative_to(vault)), None)
+                files.pop(rel(arquivo), None)
+
+        for arquivo, dados in files.items():
+            print(arquivo, "=", dados["links"], dados["tags"])
