@@ -28,9 +28,10 @@ def main():
     parser = build_parser()
     args = parser.parse_args()
 
+    core.VAULT = core.get_vault()
+
     if args.daemon:
-        vault = core.get_vault()
-        daemon.run(vault)
+        daemon.run()
     elif args.install:
         print(args.install)
     elif args.uninstall:
