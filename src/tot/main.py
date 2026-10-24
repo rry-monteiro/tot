@@ -1,91 +1,56 @@
 import argparse
 from pathlib import Path
-from platformdirs import user_data_dir, user_documents_dir
-from document_manager import DocumentManager
-from g_tags import TagsGraphGenerator
-from g_links import LinksGraphGenerator
 
-#organizar os parsers
-def build_parser()->argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="tot — gerador de grafos de notas markdown")
-    parser.add_argument("mode", choices=["links", "tags", "all"], help="tipo de grafo")
-    parser.add_argument("-f", "--force", action="store_true", help="ignora cache e regenera o gráfico")
+from platformdirs import user_data_dir, user_documents_dir
+
+
+# organizar os parsers
+def build_parser() -> argparse.ArgumentParser:
+    """constrói o parser com as flags e suas descrições e retorna o objeto parser"""
+    parser = argparse.ArgumentParser(
+        description="tot — gerador de grafos de notas markdown"
+    )
+    # parser.add_argument("mode", choices=["links", "tags", "all"], help="tipo de grafo")
+    parser.add_argument(
+        "--daemon", action="store_true", help="Sobe o daemon no sistema"
+    )
+    parser.add_argument(
+        "--install", action="store_true", help="Instala o .desktop no autostart"
+    )
+    parser.add_argument(
+        "--uninstall", action="store_true", help="Remove o .desktop do autostart"
+    )
     return parser
 
+
 # buscador de vault
-def find_vault()->Path:
+def find_vault() -> Path:
+    """
+    Entra nos documentos e procura o vault marcado com o sufixo .tot,
+    retorna erro caso não encontre ou encontre múltiplos
+    """
     # <<<
-    #busca vault na pasta documentos
+    # busca vault na pasta documentos
     docs = Path(user_documents_dir())
     if not docs.exists():
-        # docs não existe, erro
-        raise SystemExit("[!] erro: a pasta Documentos não existe.")
+        raise SystemExit("erro: a pasta Documentos não existe")
 
+    # buscando
     vaults = [p for p in docs.iterdir() if p.is_dir() and p.suffix == ".tot"]
 
+    # mais de 1 vault / nenhum vault
     if len(vaults) > 1:
-        # mais de um vault
-        raise SystemExit("[!] erro: múltiplos vaults encontrados")
+        raise SystemExit("erro: múltiplos vaults encontrados.")
     if not vaults:
-        # nenhum vault
-        raise SystemExit("[!] erro: nenhum vault encontrado, crie meu_vault.tot")
+        raise SystemExit("erro: nenhum vault encontrado, crie 'Documentos/meu_vault.tot/'")
     # >>>
     return vaults[0]
 
-# função pra ver se o vault mudou
-def dm_changed(args: argparse.Namespace) -> bool:
-    dm = DocumentManager(args.data, args.vault)
-    return dm.run()
-
-#comandos de geração
-def gen_tags(args:argparse.Namespace):
-    if not args.force and not dm_changed(args):
-        print("[~] info: nenhuma mudança detectada no vault")
-        return
-    tg = TagsGraphGenerator(args.output_tags, args.data, args.vault)
-    tg.render()
-    print(f"[+] info: grafo de tags em {args.output_tags}")
-
-def gen_links(args:argparse.Namespace):
-    if not args.force and not dm_changed(args):
-        print("[~] info: nenhuma mudança detectada no vault")
-        return
-    lg = LinksGraphGenerator(args.output_links, args.data, args.vault)
-    lg.render()
-    print(f"[+] info: grafo de links em {args.output_links}")
-
-def gen_all(args:argparse.Namespace):
-    if not args.force and not dm_changed(args):
-        print("[~] info: nenhuma mudança detectada no vault")
-        return
-    tg = TagsGraphGenerator(args.output_tags, args.data, args.vault)
-    tg.render()
-    lg = LinksGraphGenerator(args.output_links, args.data, args.vault)
-    lg.render()
-    print(f"[+] info: dois grafos gerados em {args.output_links} e {args.output_tags}")
-
 def main():
     # <<<
-    # pegando args
-    parse = build_parser()
-    args = parse.parse_args()
-    # resolvendo vault
-    args.vault = find_vault()
-    # resolve paths (links e tags)
-    args.output_links = (Path(user_documents_dir()) / f"{args.vault.name}.links.html")
-    args.output_tags = (Path(user_documents_dir()) / f"{args.vault.name}.tags.html")
-    Path(user_data_dir("tot")).mkdir(exist_ok=True, parents=True)
-    args.data = Path(user_data_dir("tot")) / f"{args.vault.name}.json"
-
-    # escolha de modo
-    match args.mode:
-        case "links":
-            gen_links(args)
-        case "tags":
-            gen_tags(args)
-        case "all":
-            gen_all(args)
+    ...
     # >>>
+
 
 if __name__ == "__main__":
     main()
