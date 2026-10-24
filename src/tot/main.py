@@ -29,7 +29,7 @@ def main():
     args = parser.parse_args()
 
     if args.daemon:
-        vault = core.find_vault()
+        vault = core.get_vault()
         daemon.run(vault)
     elif args.install:
         print(args.install)
