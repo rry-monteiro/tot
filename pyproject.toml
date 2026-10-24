@@ -1,12 +1,19 @@
 [project]
 name = "tot"
-version = "0.1.0"
+version = "0.2.0"
 description = "tot - Grafo de conhecimento local que conecta anotações por links e tags com visualização interativa"
 readme = "README.md"
+authors = [
+    { name = "Raimundo", email = "ray.yh.yh@gmail.com" }
+]
 requires-python = ">=3.14"
 dependencies = [
     "platformdirs>=4.10.0",
 ]
+
+[build-system]
+requires = ["uv_build>=0.12,<0.13"]
+build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
