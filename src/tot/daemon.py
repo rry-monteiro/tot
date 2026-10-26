@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from watchdog.utils.event_debouncer import EventDebouncer
@@ -92,7 +94,7 @@ def processar(events, indice):
     for arquivo, operacao in fila.items():
         match operacao:
             case "update":
-                ...
+                indice.update(arquivo)
             case "delete":
                 ...
             case ("move", destino):
@@ -100,12 +102,14 @@ def processar(events, indice):
 
 
 def run():
+
     assert core.VAULT is not None
-    vault = core.VAULT
-    files = core.scan()["files"]
+    vault:Path = core.VAULT # o vault, Path
+    files:dict = core.scan()["files"] # serialização dos dados do vault
 
+    indice = core.Vault(files, vault)
 
-    debouncer = EventDebouncer(debounce_interval_seconds=1, events_callback=processar)
+    debouncer = EventDebouncer(debounce_interval_seconds=1, events_callback=lambda events: processar(events, indice))
     manager = Manager(debouncer)  # dispara os eventos
     observer = Observer()  # observa
     observer.schedule(

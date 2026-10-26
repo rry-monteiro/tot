@@ -9,19 +9,19 @@ VAULT: Path | None = None
 REGEX_TAGS = re.compile(r"tags:\s*\[([^\]]*)\]")
 REGEX_LINKS = re.compile(r'\[[^\]]+\]\(([^)#\s"]+\.md)')
 
+
 class Vault:
-    def __init__(self, files:dict, vault:Path):
+    def __init__(self, files: dict, vault: Path):
         self.files = files
         self.vault = vault
 
-    def upgrade(self):
-        ...
+    def update(self, arquivo):
+        chave, info = parser(Path(arquivo))  # parseia o aarquivo
+        self.files[chave] = info  # guarda as informações
 
-    def delete(self):
-        ...
+    def delete(self): ...
 
-    def move(self):
-        ...
+    def move(self): ...
 
 
 def hash_is_equal(files: dict, old_relative_path: str, new_path: str):
