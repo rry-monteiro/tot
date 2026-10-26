@@ -1,7 +1,6 @@
 from watchdog.events import FileSystemEventHandler
-
-from watchdog.utils.event_debouncer import EventDebouncer
 from watchdog.observers import Observer
+from watchdog.utils.event_debouncer import EventDebouncer
 
 from . import core
 
@@ -74,8 +73,17 @@ class Manager(FileSystemEventHandler):
 
 
 def processar(events):
+    fila = set()
     for event in events:
-        print(event.event_type, event.src_path)
+        match event.event_type:
+            case "created":
+                fila.add(("created", event.dest_path))
+            case "modified":
+                fila.add(("created", event.dest_path))
+            case "deleted":
+                fila.add(("created", event.dest_path))
+            case "moved":
+                fila.add(("created", event.dest_path))
 
 
 def run():
