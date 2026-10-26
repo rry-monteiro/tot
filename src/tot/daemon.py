@@ -1,6 +1,7 @@
-from pathlib import Path
+from watchdog.events import FileSystemEventHandler
 
-from watchfiles import Change, watch
+from watchdog.utils.event_debouncer import EventDebouncer
+from watchdog.observers import Observer
 
 from . import core
 
@@ -38,22 +39,60 @@ const GRAFOS = {
 # >>>
 --- exemple js ---
 
+--- exemplo watchdog ---
+# <<<
+created /home/rry/Documentos/notas.tot/asdfasdf
+modified /home/rry/Documentos/notas.tot
+opened /home/rry/Documentos/notas.tot/asdfasdf
+closed /home/rry/Documentos/notas.tot/asdfasdf
+modified /home/rry/Documentos/notas.tot
+opened /home/rry/Documentos/notas.tot/asdfasdf
+closed_no_write /home/rry/Documentos/notas.tot/asdfasdf
+moved /home/rry/Documentos/notas.tot/asdfasdf
+modified /home/rry/Documentos/notas.tot
+opened /home/rry/Documentos/notas.tot/asdfasdfaskjdfhgaskdjhf
+closed_no_write /home/rry/Documentos/notas.tot/asdfasdfaskjdfhgaskdjhf
+opened /home/rry/Documentos/notas.tot/asdfasdfaskjdfhgaskdjhf
+closed_no_write /home/rry/Documentos/notas.tot/asdfasdfaskjdfhgaskdjhf
+deleted /home/rry/Documentos/notas.tot/asdfasdfaskjdfhgaskdjhf
+modified /home/rry/Documentos/notas.tot
+# >>>
+--- exemplo watchdog ---
+
 --- obs ---
 os ids são os caminhos relativos ao path
 --- obs ---
 """
 
-class Observer:
-    def __init__(self):
-        ...
+
+class Manager(FileSystemEventHandler):
+    def __init__(self, debouncer):
+        self.debouncer = debouncer
+
+    def on_any_event(self, event):
+        self.debouncer.handle_event(event)
+
+
+def processar(events):
+    for event in events:
+        print(event.event_type, event.src_path)
+
 
 def run():
     assert core.VAULT is not None
     vault = core.VAULT
     files = core.scan()["files"]
 
-    def rel(p) -> str:
-        return str(Path(p).relative_to(vault))
+    debouncer = EventDebouncer(debounce_interval_seconds=1, events_callback=processar)
+    manager = Manager(debouncer)  # dispara os eventos
+    observer = Observer()  # observa
+    observer.schedule(
+        event_handler=manager, path=str(vault), recursive=True
+    )  # liga um ao outro
+    observer.start()
+    debouncer.start()
+    observer.join()
+    debouncer.join()
 
     # for mud in watch(vault, watch_filter=lambda _, p: p.lower().endswith(".md")):
     #     # capturando deleções e adições do vault
