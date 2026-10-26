@@ -72,24 +72,38 @@ class Manager(FileSystemEventHandler):
         self.debouncer.handle_event(event)
 
 
-def processar(events):
-    fila = set()
+def processar(events, indice):
+    fila:dict[str,tuple|str] = {}
+
     for event in events:
+        if event.is_directory:
+            continue
+
         match event.event_type:
-            case "created":
-                fila.add(("created", event.dest_path))
-            case "modified":
-                fila.add(("created", event.dest_path))
+            case "created" | "modified":
+                fila[event.src_path] = "update"
+
             case "deleted":
-                fila.add(("created", event.dest_path))
+                fila[event.src_path] = "delete"
+
             case "moved":
-                fila.add(("created", event.dest_path))
+                fila[event.src_path] = ("move", event.dest_path)
+
+    for arquivo, operacao in fila.items():
+        match operacao:
+            case "update":
+                ...
+            case "delete":
+                ...
+            case ("move", destino):
+                ...
 
 
 def run():
     assert core.VAULT is not None
     vault = core.VAULT
     files = core.scan()["files"]
+
 
     debouncer = EventDebouncer(debounce_interval_seconds=1, events_callback=processar)
     manager = Manager(debouncer)  # dispara os eventos
@@ -101,38 +115,3 @@ def run():
     debouncer.start()
     observer.join()
     debouncer.join()
-
-    # for mud in watch(vault, watch_filter=lambda _, p: p.lower().endswith(".md")):
-    #     # capturando deleções e adições do vault
-    #     deleted = [p for t, p in mud if t == Change.deleted]
-    #     added = [p for t, p in mud if t == Change.added]
-    #
-    #     # se os dois existirem na mesma "linha"
-    #     if len(deleted) == 1 and len(added) == 1:
-    #         # captura o antigo (detelado) e o novo (adicinado)
-    #         old, new = rel(deleted[0]), rel(added[0])
-    #         # se o antigo existe no vault serializado e o hash dos dois é igual
-    #             # movimentação de arquivo
-    #         if old in files and core.hash_is_equal(files, old, added[0]):
-    #             # parseia o arquivo
-    #             files[new] = core.parser(Path(added[0]))[1]
-    #             # remove o antigo
-    #             del files[old]
-    #             # transforma tudo em novo
-    #             for info in files.values():
-    #                 info["links"] = [new if l == old else l for l in info["links"]]
-    #             # proxima mudança
-    #             continue
-    #
-    #     for tipo, arquivo in mud:
-    #         if tipo in (Change.added, Change.modified):
-    #             try:
-    #                 chave, info = core.parser(Path(arquivo))
-    #             except FileNotFoundError:
-    #                 continue
-    #             files[chave] = info
-    #         elif tipo == Change.deleted:
-    #             files.pop(rel(arquivo), None)
-    #
-    #     for arquivo, dados in files.items():
-    #         print(arquivo, "=", dados["links"], dados["tags"])

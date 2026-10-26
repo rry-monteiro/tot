@@ -9,6 +9,20 @@ VAULT: Path | None = None
 REGEX_TAGS = re.compile(r"tags:\s*\[([^\]]*)\]")
 REGEX_LINKS = re.compile(r'\[[^\]]+\]\(([^)#\s"]+\.md)')
 
+class Vault:
+    def __init__(self, files:dict, vault:Path):
+        self.files = files
+        self.vault = vault
+
+    def upgrade(self):
+        ...
+
+    def delete(self):
+        ...
+
+    def move(self):
+        ...
+
 
 def hash_is_equal(files: dict, old_relative_path: str, new_path: str):
     texto = Path(new_path).read_text(encoding="utf-8", errors="replace")
