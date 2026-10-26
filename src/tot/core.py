@@ -19,7 +19,10 @@ class Vault:
         chave, info = parser(Path(arquivo))  # parseia o aarquivo
         self.files[chave] = info  # guarda as informações
 
-    def delete(self): ...
+    def delete(self, arquivo):
+        chave = str(Path(arquivo).relative_to(self.vault)) # encontra o str do path relativo da nota
+        self.files.pop(chave, None) # remove dos arquivos
+
 
     def move(self): ...
 

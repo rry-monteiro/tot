@@ -96,7 +96,7 @@ def processar(events, indice):
             case "update":
                 indice.update(arquivo)
             case "delete":
-                ...
+                indice.delete(arquivo)
             case ("move", destino):
                 ...
 
@@ -112,9 +112,7 @@ def run():
     debouncer = EventDebouncer(debounce_interval_seconds=1, events_callback=lambda events: processar(events, indice))
     manager = Manager(debouncer)  # dispara os eventos
     observer = Observer()  # observa
-    observer.schedule(
-        event_handler=manager, path=str(vault), recursive=True
-    )  # liga um ao outro
+    observer.schedule(event_handler=manager, path=str(vault), recursive=True)  # liga um ao outro
     observer.start()
     debouncer.start()
     observer.join()
