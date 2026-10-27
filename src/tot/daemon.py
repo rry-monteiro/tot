@@ -4,7 +4,7 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from watchdog.utils.event_debouncer import EventDebouncer
 
-from . import core
+from . import core, vault_index
 
 """
 --- exemple js ---
@@ -85,18 +85,20 @@ def processar(events, indice):
             case "created" | "modified":
                 if not event.is_directory:
                     fila[event.src_path] = "update"
+                else:
+                    fila[event.src_path] = "update_dir"
 
             case "deleted":
                 if not event.is_directory:
                     fila[event.src_path] = "delete"
+                else:
+                    fila[event.src_path] = "delete_dir"
 
             case "moved":
                 if not event.is_directory:
                     fila[event.src_path] = ("move", event.dest_path)
                 else:
                     fila[event.src_path] = ("move_dir", event.dest_path)
-
-
 
     for arquivo, operacao in fila.items():
         match operacao:
@@ -116,7 +118,7 @@ def run():
     vault: Path = core.VAULT  # o vault, Path
     files: dict = core.scan()["files"]  # serialização dos dados do vault
 
-    indice = core.Vault(files, vault)
+    indice = vault_index.VaultIndex(files, vault)
 
     debouncer = EventDebouncer(
         debounce_interval_seconds=1,
