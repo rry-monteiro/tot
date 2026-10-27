@@ -75,7 +75,7 @@ class Manager(FileSystemEventHandler):
 
 
 def processar(events, indice):
-    fila:dict[str,tuple|str] = {}
+    fila: dict[str, tuple | str] = {}
 
     for event in events:
         if event.is_directory:
@@ -83,13 +83,20 @@ def processar(events, indice):
 
         match event.event_type:
             case "created" | "modified":
-                fila[event.src_path] = "update"
+                if not event.is_directory:
+                    fila[event.src_path] = "update"
 
             case "deleted":
-                fila[event.src_path] = "delete"
+                if not event.is_directory:
+                    fila[event.src_path] = "delete"
 
             case "moved":
-                fila[event.src_path] = ("move", event.dest_path)
+                if not event.is_directory:
+                    fila[event.src_path] = ("move", event.dest_path)
+                else:
+                    fila[event.src_path] = ("move_dir", event.dest_path)
+
+
 
     for arquivo, operacao in fila.items():
         match operacao:
@@ -98,21 +105,28 @@ def processar(events, indice):
             case "delete":
                 indice.delete(arquivo)
             case ("move", destino):
-                ...
+                indice.move(arquivo, destino)
+            case ("move_dir", destino):
+                indice.move_dir(arquivo, destino)
 
 
 def run():
 
     assert core.VAULT is not None
-    vault:Path = core.VAULT # o vault, Path
-    files:dict = core.scan()["files"] # serialização dos dados do vault
+    vault: Path = core.VAULT  # o vault, Path
+    files: dict = core.scan()["files"]  # serialização dos dados do vault
 
     indice = core.Vault(files, vault)
 
-    debouncer = EventDebouncer(debounce_interval_seconds=1, events_callback=lambda events: processar(events, indice))
+    debouncer = EventDebouncer(
+        debounce_interval_seconds=1,
+        events_callback=lambda events: processar(events, indice),
+    )
     manager = Manager(debouncer)  # dispara os eventos
     observer = Observer()  # observa
-    observer.schedule(event_handler=manager, path=str(vault), recursive=True)  # liga um ao outro
+    observer.schedule(
+        event_handler=manager, path=str(vault), recursive=True
+    )  # liga um ao outro
     observer.start()
     debouncer.start()
     observer.join()
