@@ -68,18 +68,36 @@ class VaultIndex:
                 )  # retorna nome_novo/nome_do_arquiv, len(old) corta o nome antigo
             return caminho
 
-        # substituimos tudo
-        self.files = {replace(chave): info for chave, info in self.files.items()}
+        # definimos os novos
+        self.files = {
+            replace(chave): info
+            for chave, info in self.files.items()
+        }
 
-        # atualizamos as referências
-        self.replace_refs(old, new)
+        # atualização dos links armazenados
+        for dados in self.files.values():
+            dados["links"] = [
+                replace(link)
+                for link in dados["links"]
+            ]
 
-    def update_dir(self):
+
+    def update_dir(self, diretorio:str):
         """
         adiciona todos os arquivos de uma pasta nova em files, fazendo um for(update) em tudo
         """
+        for arquivo in Path(diretorio).rglob("*.md"): # varre recursivamente o diretorio dentro do vault
+            self.update(str(arquivo)) # update em tudo que achar
 
-    def delete_dir(self):
+    def delete_dir(self, diretorio:str):
         """
         remove todos os arquivos da serialização quando uma pasta é deletada fazendor for(delete) em tudo
         """
+        prefixo = str(Path(diretorio).relative_to(self.vault)) + "/" # captura o prefixo dos arquivos
+
+        for chave in list(self.files): # remove todos que tenham esse prefixo
+            if chave.startswith(prefixo):
+                del self.files[chave]
+
+
+

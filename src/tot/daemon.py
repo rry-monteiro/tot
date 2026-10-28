@@ -78,15 +78,13 @@ def processar(events, indice):
     fila: dict[str, tuple | str] = {}
 
     for event in events:
-        if event.is_directory:
-            continue
-
         match event.event_type:
             case "created" | "modified":
-                if not event.is_directory:
+                if event.is_directory:
+                    if event.event_type == "created":
+                        fila[event.src_path] = "update_dir"
+                elif event.src_path.endswith(".md"):
                     fila[event.src_path] = "update"
-                else:
-                    fila[event.src_path] = "update_dir"
 
             case "deleted":
                 if not event.is_directory:
@@ -100,16 +98,26 @@ def processar(events, indice):
                 else:
                     fila[event.src_path] = ("move_dir", event.dest_path)
 
-    for arquivo, operacao in fila.items():
+    for caminho, operacao in fila.items():
         match operacao:
             case "update":
-                indice.update(arquivo)
+                indice.update(caminho)
+                print(operacao, caminho)
             case "delete":
-                indice.delete(arquivo)
+                indice.delete(caminho)
+                print(operacao, caminho)
             case ("move", destino):
-                indice.move(arquivo, destino)
+                indice.move(caminho, destino)
+                print(operacao, caminho)
+            case "update_dir":
+                indice.update_dir(caminho)
+                print(operacao, caminho)
+            case "delete_dir":
+                indice.delete_dir(caminho)
+                print(operacao, caminho)
             case ("move_dir", destino):
-                indice.move_dir(arquivo, destino)
+                indice.move_dir(caminho, destino)
+                print(operacao, caminho)
 
 
 def run():
