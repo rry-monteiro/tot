@@ -119,15 +119,25 @@ def processar(events, indice):
                 indice.move_dir(caminho, destino)
                 print(operacao, caminho)
 
+    if fila:
+        data = indice.build_js()
+        core.build_graph(data)
+
 
 def run():
-
     assert core.VAULT is not None
+
     vault: Path = core.VAULT  # o vault, Path
     files: dict = core.scan()["files"]  # serialização dos dados do vault
 
+    # define o vaultIndex
     indice = vault_index.VaultIndex(files, vault)
+    
+    # inicia coinstruindo o grafico
+    data = indice.build_js()
+    core.build_graph(data)
 
+    # define o deboucer
     debouncer = EventDebouncer(
         debounce_interval_seconds=1,
         events_callback=lambda events: processar(events, indice),
