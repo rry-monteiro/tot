@@ -177,7 +177,6 @@ class VaultIndex:
         conteudo = json.dumps(
             dados,
             ensure_ascii=False,  # Preserva caracteres como á, ç, ã
-            indent=2,  # Formata o resultado para facilitar a leitura
         )
 
         # Adiciona a declaração da variável JavaScript.
