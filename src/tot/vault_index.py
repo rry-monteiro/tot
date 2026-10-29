@@ -9,13 +9,13 @@ class VaultIndex:
         self.files = files
         self.vault = vault
 
-    def replace_refs(self, old: str, new: str):
-        """
-        substitui todas as referências dos dados das notas, itera em tudo e troca pelo nome novo
-        """
-        for dados in self.files.values():  # pra cada dado nos valores
-            # itera em tudo mudando os valores pro nome novo
-            dados["links"] = [new if link == old else link for link in dados["links"]]
+    # def _replace_refs(self, old: str, new: str):
+    #     """
+    #     substitui todas as referências dos dados das notas, itera em tudo e troca pelo nome novo
+    #     """
+    #     for dados in self.files.values():  # pra cada dado nos valores
+    #         # itera em tudo mudando os valores pro nome novo
+    #         dados["links"] = [new if link == old else link for link in dados["links"]]
 
     def update(self, arquivo: str):
         """
@@ -126,6 +126,7 @@ class VaultIndex:
                 del self.files[chave]
 
     def build_js(self):
+        """usa os dados do vault pra construir uma constante que vai servir de base pro D3 construir os graficos"""
         tag_graph_nodes = {}  # nós para o grafico de tags
         link_graph_nodes = {}  # nós para o grafico de links
 
