@@ -38,6 +38,13 @@ def parser(file: Path) -> tuple:
     return str(file.relative_to(VAULT)), {"tags": tags, "links": links, "hash": h}
 
 
+def build_graph(data: str):
+    template_path = Path(__file__).resolve().parent / "d3.html"
+    template = template_path.read_text(encoding="utf-8")
+    graph = template.replace("/*INSERT_DATA*/", data)
+    Path(Path(user_documents_dir())/"tot.graph.html").write_text(graph, encoding="utf-8")
+
+
 def scan() -> dict:
     """
     scaneia o vault por completo e devolve a estrutura base dos graficos de tags e notas
