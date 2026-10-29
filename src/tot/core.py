@@ -1,4 +1,3 @@
-import hashlib
 import re
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -18,8 +17,6 @@ def parser(file: Path) -> tuple:
 
     text = file.read_text(encoding="utf-8", errors="replace")
 
-    h = hashlib.blake2b(text.encode(), digest_size=16).hexdigest()
-
     # tags
     str_tags = REGEX_TAGS.findall(text)
     tags = [
@@ -35,7 +32,7 @@ def parser(file: Path) -> tuple:
         relative = absolute.relative_to(VAULT)
         links.append(str(relative))
 
-    return str(file.relative_to(VAULT)), {"tags": tags, "links": links, "hash": h}
+    return str(file.relative_to(VAULT)), {"tags": tags, "links": links}
 
 
 def build_graph(data: str):
