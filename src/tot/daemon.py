@@ -102,22 +102,16 @@ def processar(events, indice):
         match operacao:
             case "update":
                 indice.update(caminho)
-                print(operacao, caminho)
             case "delete":
                 indice.delete(caminho)
-                print(operacao, caminho)
             case ("move", destino):
                 indice.move(caminho, destino)
-                print(operacao, caminho)
             case "update_dir":
                 indice.update_dir(caminho)
-                print(operacao, caminho)
             case "delete_dir":
                 indice.delete_dir(caminho)
-                print(operacao, caminho)
             case ("move_dir", destino):
                 indice.move_dir(caminho, destino)
-                print(operacao, caminho)
 
     if fila:
         data = indice.build_js()

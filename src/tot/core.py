@@ -1,12 +1,15 @@
 import re
+import socket
+import json
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from platformdirs import user_documents_dir
+from platformdirs import user_documents_dir, user_runtime_dir
 
 VAULT: Path | None = None
 REGEX_TAGS = re.compile(r"tags:\s*\[([^\]]*)\]")
 REGEX_LINKS = re.compile(r'\[[^\]]+\]\(([^)#\s"]+\.md)')
+SOCK: Path = Path(user_runtime_dir("tot")) / "tot.sock"
 
 
 def parser(file: Path) -> tuple:
@@ -87,3 +90,17 @@ def get_vault() -> Path:
             "erro: nenhum vault encontrado, crie 'Documentos/meu_vault.tot/'"
         )
     return vaults[0]
+
+def get_files()->dict:
+    # caso o daemon esteja ligado
+    try:
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+            s.settimeout(2)
+            s.connect(str(SOCK))
+            files = json.loads(s.makefile("r", encoding="utf-8").readline())
+    # caso esteja desligado
+    except (FileNotFoundError, ConnectionRefusedError):
+        print("tot desligado, ligue com 'tot system daemon'")
+        files = scan()["files"]
+    # retorna o files de qualquer jeito
+    return files
