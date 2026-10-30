@@ -1,4 +1,3 @@
-import shutil
 import sys
 from pathlib import Path
 
@@ -10,7 +9,7 @@ def install() -> None:
 
     exe = Path(sys.argv[0]).absolute()
     if ".venv" in exe.parts:
-        print("rode 'tot system install' pelo comando instalado (uv tool install), não pelo uv run", file=sys.stderr,)
+        print("rode 'tot system install' pelo comando instalado (uv tool install), não pelo uv run", file=sys.stderr)
         sys.exit(1)
 
     conteudo = f"""[Desktop Entry]

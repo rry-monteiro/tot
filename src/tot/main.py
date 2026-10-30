@@ -41,14 +41,12 @@ def main():
     if args.cmd == "system":
         if consulta:
             parser.error("'system' não pode ser usado com -t, -n ou -m")
-        # daemon / install / uninstall aqui
         if args.action == "daemon":
             daemon.run()
         elif args.action == "install":
             autostart.install()
         elif args.action == "uninstall":
             autostart.uninstall()
-
     elif consulta:
         if args.find_tag is not None:
             pass
