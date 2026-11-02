@@ -49,11 +49,11 @@ def main():
             autostart.uninstall()
     elif consulta:
         if args.find_tag is not None:
-            pass
+            core.find_tag(args.find_tag)
         if args.find_note is not None:
-            pass
+            core.find_note(args.find_note)
         if args.metrics:
-            pass
+            core.get_metrics()
     else:
         parser.print_help()
 
