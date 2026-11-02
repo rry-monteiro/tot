@@ -1,3 +1,6 @@
+import json
+import socket
+import threading
 from pathlib import Path
 
 from watchdog.events import FileSystemEventHandler
@@ -65,6 +68,9 @@ os ids são os caminhos relativos ao path
 --- obs ---
 """
 
+SOCK = core.SOCK
+LOCK = threading.Lock()
+
 
 class Manager(FileSystemEventHandler):
     def __init__(self, debouncer):
@@ -78,6 +84,7 @@ def processar(events, indice):
     fila: dict[str, tuple | str] = {}
 
     for event in events:
+        # <<<
         match event.event_type:
             case "created" | "modified":
                 if event.is_directory:
@@ -97,8 +104,10 @@ def processar(events, indice):
                     fila[event.src_path] = ("move", event.dest_path)
                 else:
                     fila[event.src_path] = ("move_dir", event.dest_path)
+        # >>>
 
     for caminho, operacao in fila.items():
+        # <<<
         match operacao:
             case "update":
                 indice.update(caminho)
@@ -112,10 +121,28 @@ def processar(events, indice):
                 indice.delete_dir(caminho)
             case ("move_dir", destino):
                 indice.move_dir(caminho, destino)
-
+        # >>>
     if fila:
         data = indice.build_js()
         core.build_graph(data)
+
+
+def servir(indice):
+    """thread principal"""
+    SOCK.parent.mkdir(parents=True, exist_ok=True)
+    SOCK.unlink(missing_ok=True)  # sobra de um daemon que morreu
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as srv:
+        srv.bind(str(core.SOCK))
+        srv.listen()
+        while True:
+            conn, _ = srv.accept()  # bloqueia até alguém conectar
+            with conn:
+                try:
+                    with LOCK:  # segura só enquanto serializa
+                        msg = json.dumps(indice.files, ensure_ascii=False) + "\n"
+                    conn.sendall(msg.encode("utf-8"))
+                except OSError:
+                    pass  # cliente desconectou no meio
 
 
 def run():
@@ -126,7 +153,7 @@ def run():
 
     # define o vaultIndex
     indice = vault_index.VaultIndex(files, vault)
-    
+
     # inicia coinstruindo o grafico
     data = indice.build_js()
     core.build_graph(data)
@@ -143,5 +170,10 @@ def run():
     )  # liga um ao outro
     observer.start()
     debouncer.start()
-    observer.join()
-    debouncer.join()
+
+    try:
+        servir(indice)  # thread principal fica aqui, no lugar do join()
+    finally:
+        observer.stop()
+        debouncer.stop()
+        SOCK.unlink(missing_ok=True)
