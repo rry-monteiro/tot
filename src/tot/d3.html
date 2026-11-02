@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>TOT</title>
+  <style>
+    /* <<< */
+    #menu-lateral label {
+      color: #b8b8c8;
+      font: 500 12px Arial;
+    }
+
+    #espacamento {
+      width: 100%;
+      margin: 0;
+      cursor: pointer;
+      accent-color: #574EF2;
+    }
+
+    #valorEspacamento {
+      color: #8AA5FF;
+      font: 12px Arial;
+      text-align: center;
+    }
+    #menu-lateral {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 130px;
+      padding: 12px;
+      background: #25252d;
+      border: 1px solid #383846;
+      border-radius: 14px;
+      box-shadow: 0 8px 30px #00000045;
+    }
+
+    .menu-titulo {
+      color: #8AA5FF;
+      font: 700 14px Arial;
+      letter-spacing: 2px;
+      text-align: center;
+      padding: 5px 0 5px;
+    }
+
+    #menu-lateral button {
+      background: transparent;
+      color: #b8b8c8;
+
+      border: 1px solid transparent;
+      border-radius: 8px;
+
+      padding: 8px 12px;
+
+      font: 500 14px Arial;
+      text-align: left;
+
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    #menu-lateral button:hover {
+      background: #353542;
+      color: #ffffff;
+    }
+
+    #menu-lateral button.ativo {
+      background: #574EF2;
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    .menu-divisor {
+      height: 2px;
+      background: #383846;
+      margin: 1px 0;
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #1b1b1f;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  /* >>> */
+  </style>
+
+</head>
+  <body>
+  <div id="menu-lateral">
+     <div class="menu-titulo">TOT</div>
+     <button class="ativo" onclick="trocarGrafo('tags')"> Tags </button>
+     <button onclick="trocarGrafo('links')"> Links </button>
+     <div class="menu-divisor"></div>
+     <button id="botaoNomes" onclick="alternarNomes()"> Ocultar nomes </button>
+     <div class="menu-divisor"></div>
+     <label for="espacamento">Espaçamento</label>
+    <input type="range" id="espacamento" min="50" max="200" value="100" step="5" oninput="alterarEspacamento(this.value)" >
+    <span id="valorEspacamento">%</span>
+  </div>
+
+  <canvas id="grafo"></canvas>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+
+  <script>
+
+    let grafoAtivo = "tags"; // grafico ativo
+    let transformacao = d3.zoomIdentity; // guarda info de zoom
+    let mostrarNomes = true;
+
+    // função que liga e desliga nomes
+    function alternarNomes() {
+      mostrarNomes = !mostrarNomes;
+      document.querySelector("#botaoNomes").textContent =
+        mostrarNomes ? "Ocultar nomes" : "Mostrar nomes";
+      desenhar();
+    }
+
+    // função pra alterar o espaçamento das notas
+    function alterarEspacamento(valor) {
+      const fator = Number(valor) / 100;
+      const sim = grafos[grafoAtivo].simulation;
+      grafos[grafoAtivo].espacamento = Number(valor);
+      // Modifica a distância das conexões
+      sim.force("link")
+        .distance(60 * fator);
+
+      // Modifica a repulsão
+      sim.force("charge")
+        .strength(-60 * fator);
+      // Reativa a simulação para reorganizar os nós
+      sim.alpha(0.8).restart();
+      // Atualiza o texto no menu
+      document.getElementById("valorEspacamento")
+        .textContent = valor + "%";
+    }
+
+    // função pra mudança de grafico
+    function trocarGrafo(nome) {
+      if (!grafos[nome]) return;
+      grafos[grafoAtivo].simulation.stop();
+      grafoAtivo = nome;
+      const valor = grafos[grafoAtivo].espacamento ?? 100;
+      document.getElementById("espacamento").value = valor;
+      alterarEspacamento(valor);
+      grafos[grafoAtivo].simulation.restart();
+      // Atualiza o botão ativo
+      document.querySelectorAll("#menu-lateral button")
+        .forEach(botao => {
+          botao.classList.toggle(
+            "ativo",
+            botao.textContent.trim().toLowerCase() === nome
+          );
+        });
+      //desenha
+      desenhar();
+    }
+
+    // função que sedenha a bolinha de direção
+    function desenharBolinha(link) {
+      const origem = link.source;
+      const destino = link.target;
+      const dx = destino.x - origem.x;
+      const dy = destino.y - origem.y;
+      const distancia = Math.hypot(dx, dy);
+      if (distancia === 0) return;
+      const ux = dx / distancia;
+      const uy = dy / distancia;
+      const raio = estilosPorTipo[destino.kind].raio;
+      const x = destino.x - ux * (raio + 1);
+      const y = destino.y - uy * (raio + 1);
+      ctx.beginPath();
+      ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = "gray";
+      ctx.fill();
+    }
+
+    // pegando canvas e criando contexto
+    const canvas = document.getElementById("grafo");
+    const ctx = canvas.getContext("2d");
+
+    // definindo tamanho do canvas = tela inteira
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    // definindo centro de x e y
+    const centroX = canvas.width / 2;
+    const centroY = canvas.height / 2;
+
+    // criação dos grafos
+    // const grafos = {"tags": {"nodes": [{"id": "conexao-dhcpcd.md", "kind": "note"}, {"id": "@linux", "kind": "tag"}, {"id": "conventional-commits.md", "kind": "note"}, {"id": "@git", "kind": "tag"}, {"id": "usando-git.md", "kind": "note"}, {"id": "atalhos-kitty.md", "kind": "note"}, {"id": "@kitty", "kind": "tag"}, {"id": "@terminal", "kind": "tag"}, {"id": "minimo-gnome.md", "kind": "note"}, {"id": "@gnome", "kind": "tag"}, {"id": "usando-gitconfig.md", "kind": "note"}, {"id": "imersao-databricks.md", "kind": "note"}, {"id": "@ia", "kind": "tag"}, {"id": "@databricks", "kind": "tag"}, {"id": "wpa_supplicant.md", "kind": "note"}, {"id": "usando-uv.md", "kind": "note"}, {"id": "@python", "kind": "tag"}, {"id": "learning-rust/instalacao.md", "kind": "note"}, {"id": "@rust", "kind": "tag"}, {"id": "learning-rust/ola-mundo.md", "kind": "note"}, {"id": "learning-rust/variaveis.md", "kind": "note"}, {"id": "learning-rust/rustup.md", "kind": "note"}, {"id": "comandos-gerais/comandos-git.md", "kind": "note"}, {"id": "comandos-gerais/comandos-linux.md", "kind": "note"}, {"id": "comandos-gerais/comandos-vim.md", "kind": "note"}, {"id": "@neovim", "kind": "tag"}, {"id": "comandos-gerais/comandos-xbps.md", "kind": "note"}, {"id": "@xbps", "kind": "tag"}, {"id": "@void", "kind": "tag"}, {"id": "comandos-gerais/comandos-uv.md", "kind": "note"}, {"id": "comandos-gerais/comandos-cargo.md", "kind": "note"}, {"id": "comandos-gerais/comandos-pip.md", "kind": "note"}, {"id": "@pip", "kind": "tag"}, {"id": "learning-python/python-roadmap.md", "kind": "note"}, {"id": "learning-python/01-fundamentos-da-linguagem.md", "kind": "note"}, {"id": "learning-python/00-preparacao-do-ambiente.md", "kind": "note"}, {"id": "meus-dotfiles/meu-neovim.md", "kind": "note"}, {"id": "meus-dotfiles/meu-kitty.md", "kind": "note"}], "edges": [{"source": "@xbps", "target": "comandos-gerais/comandos-xbps.md"}, {"source": "@rust", "target": "learning-rust/instalacao.md"}, {"source": "@linux", "target": "comandos-gerais/comandos-linux.md"}, {"source": "@ia", "target": "imersao-databricks.md"}, {"source": "@python", "target": "learning-python/python-roadmap.md"}, {"source": "@python", "target": "learning-python/00-preparacao-do-ambiente.md"}, {"source": "@void", "target": "comandos-gerais/comandos-xbps.md"}, {"source": "@rust", "target": "learning-rust/variaveis.md"}, {"source": "@terminal", "target": "meus-dotfiles/meu-kitty.md"}, {"source": "@databricks", "target": "imersao-databricks.md"}, {"source": "@linux", "target": "minimo-gnome.md"}, {"source": "@git", "target": "comandos-gerais/comandos-git.md"}, {"source": "@neovim", "target": "comandos-gerais/comandos-vim.md"}, {"source": "@linux", "target": "meus-dotfiles/meu-kitty.md"}, {"source": "@python", "target": "comandos-gerais/comandos-uv.md"}, {"source": "@rust", "target": "comandos-gerais/comandos-cargo.md"}, {"source": "@gnome", "target": "minimo-gnome.md"}, {"source": "@git", "target": "conventional-commits.md"}, {"source": "@linux", "target": "wpa_supplicant.md"}, {"source": "@python", "target": "comandos-gerais/comandos-pip.md"}, {"source": "@kitty", "target": "atalhos-kitty.md"}, {"source": "@rust", "target": "learning-rust/ola-mundo.md"}, {"source": "@git", "target": "usando-gitconfig.md"}, {"source": "@linux", "target": "conexao-dhcpcd.md"}, {"source": "@rust", "target": "learning-rust/rustup.md"}, {"source": "@git", "target": "usando-git.md"}, {"source": "@terminal", "target": "comandos-gerais/comandos-linux.md"}, {"source": "@neovim", "target": "meus-dotfiles/meu-neovim.md"}, {"source": "@terminal", "target": "atalhos-kitty.md"}, {"source": "@python", "target": "learning-python/01-fundamentos-da-linguagem.md"}, {"source": "@python", "target": "usando-uv.md"}, {"source": "@pip", "target": "comandos-gerais/comandos-pip.md"}]}, "links": {"nodes": [{"id": "conexao-dhcpcd.md", "kind": "note"}, {"id": "conventional-commits.md", "kind": "note"}, {"id": "usando-git.md", "kind": "note"}, {"id": "atalhos-kitty.md", "kind": "note"}, {"id": "minimo-gnome.md", "kind": "note"}, {"id": "usando-gitconfig.md", "kind": "note"}, {"id": "imersao-databricks.md", "kind": "note"}, {"id": "wpa_supplicant.md", "kind": "note"}, {"id": "usando-uv.md", "kind": "note"}, {"id": "learning-rust/instalacao.md", "kind": "note"}, {"id": "learning-rust/ola-mundo.md", "kind": "note"}, {"id": "learning-rust/variaveis.md", "kind": "note"}, {"id": "learning-rust/rustup.md", "kind": "note"}, {"id": "comandos-gerais/comandos-git.md", "kind": "note"}, {"id": "comandos-gerais/comandos-linux.md", "kind": "note"}, {"id": "comandos-gerais/comandos-vim.md", "kind": "note"}, {"id": "comandos-gerais/comandos-xbps.md", "kind": "note"}, {"id": "comandos-gerais/comandos-uv.md", "kind": "note"}, {"id": "comandos-gerais/comandos-cargo.md", "kind": "note"}, {"id": "comandos-gerais/comandos-pip.md", "kind": "note"}, {"id": "learning-python/python-roadmap.md", "kind": "note"}, {"id": "learning-python/01-fundamentos-da-linguagem.md", "kind": "note"}, {"id": "learning-python/00-preparacao-do-ambiente.md", "kind": "note"}, {"id": "learning-python/24-modulos-e-packages.md", "kind": "missing"}, {"id": "meus-dotfiles/meu-neovim.md", "kind": "note"}, {"id": "meus-dotfiles/meu-kitty.md", "kind": "note"}], "edges": [{"source": "learning-python/00-preparacao-do-ambiente.md", "target": "usando-uv.md"}, {"source": "learning-python/01-fundamentos-da-linguagem.md", "target": "learning-python/00-preparacao-do-ambiente.md"}, {"source": "learning-rust/ola-mundo.md", "target": "comandos-gerais/comandos-cargo.md"}, {"source": "learning-python/00-preparacao-do-ambiente.md", "target": "learning-python/24-modulos-e-packages.md"}, {"source": "usando-git.md", "target": "comandos-gerais/comandos-git.md"}, {"source": "learning-rust/rustup.md", "target": "comandos-gerais/comandos-uv.md"}, {"source": "learning-python/00-preparacao-do-ambiente.md", "target": "comandos-gerais/comandos-pip.md"}, {"source": "learning-python/python-roadmap.md", "target": "learning-python/00-preparacao-do-ambiente.md"}, {"source": "learning-rust/instalacao.md", "target": "learning-rust/rustup.md"}, {"source": "learning-python/python-roadmap.md", "target": "learning-python/01-fundamentos-da-linguagem.md"}, {"source": "learning-python/00-preparacao-do-ambiente.md", "target": "learning-python/01-fundamentos-da-linguagem.md"}, {"source": "conexao-dhcpcd.md", "target": "wpa_supplicant.md"}, {"source": "learning-python/00-preparacao-do-ambiente.md", "target": "comandos-gerais/comandos-uv.md"}, {"source": "wpa_supplicant.md", "target": "conexao-dhcpcd.md"}, {"source": "usando-git.md", "target": "usando-gitconfig.md"}]}};
+    /*INSERT_DATA*/
+
+    // estilo do nó de acordo com o tipo dele
+    const estilosPorTipo = {
+      tag: { fill: "#574EF2", raio: 12 },
+      missing: { fill: "#FF4040", raio: 6 },
+      note: { fill: "#8AA5FF", raio: 8 }
+    };
+
+    //habiliotando zoom
+    const zoom = d3.zoom() //cria o zoom
+      // <<<
+      .scaleExtent([0.2, 5]) //limite de 20% a 500%
+      .on("zoom", (event) => {
+        transformacao = event.transform;
+        desenhar();
+      // >>>
+      });
+    // habilitando arraste nos nós
+    const drag = d3.drag() //cria o arraste
+        // <<<
+      .container(canvas)
+      // Descobre qual nó recebeu o clique
+      .subject(event => {
+        const [x, y] = transformacao.invert([event.x, event.y]);
+        const no = grafos[grafoAtivo].simulation.find(
+          x, y, 15 / transformacao.k
+        );
+        if (!no) return null;
+        const [sx, sy] = transformacao.apply([no.x, no.y]);
+        return { x: sx, y: sy, no: no };
+      })
+      // Começou a segurar
+      .on("start", event => {
+        const sim = grafos[grafoAtivo].simulation;
+        sim.alphaTarget(0.3).restart();
+        event.subject.no.fx = event.subject.no.x;
+        event.subject.no.fy = event.subject.no.y;
+      })
+      // Está movimentando
+      .on("drag", event => {
+        const [x, y] = transformacao.invert([event.x, event.y]);
+        event.subject.no.fx = x;
+        event.subject.no.fy = y;
+      })
+      // Soltou o mouse
+      .on("end", event => {
+        grafos[grafoAtivo].simulation.alphaTarget(0);
+        event.subject.no.fx = null;
+        event.subject.no.fy = null;
+      // >>>
+      });
+
+    Object.values(grafos).forEach(grafo => {
+      // Distribui os nós próximos do centro
+      grafo.nodes.forEach(no => {
+        no.x = centroX;
+        no.y = centroY;
+      });
+
+      // Cria a simulação física do grafo
+      grafo.simulation = d3.forceSimulation(grafo.nodes) //cria a simulação
+        .force("x", d3.forceX(centroX).strength(0.1)) // puxando pro centro de x
+        .force("y", d3.forceY(centroY).strength(0.1)) // puxando pro centro de y
+        .force("charge", d3.forceManyBody()
+          .strength(-60)) // força que se atraem
+        .force("collide", d3.forceCollide(8)) // força que se repelem
+        .velocityDecay(0.4) // velocidade de decaimento da animação
+        .force("link", d3.forceLink(grafo.edges)
+          .id(no => no.id)
+          .distance(60) //tamnanho das arestas
+          .strength(0.3) // força da mola
+        )
+        .on("tick", () => {
+          if (grafos[grafoAtivo] === grafo) {desenhar();}
+        });
+
+      // Inicialmente, pausa todas as simulações
+      grafo.simulation.stop();
+    });
+
+    // Inicia somente o grafo ativo
+    grafos[grafoAtivo].simulation.restart();
+
+    // ativando arrastar e zoom
+    d3.select(canvas)
+      .call(drag)
+      .call(zoom);
+
+    // função chamada a cada tick
+    function desenhar() {
+      // ve qual é o grafo ativo
+      const grafo = grafos[grafoAtivo];
+      // limpa tudo
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // salva a camera
+      ctx.save();
+      ctx.translate(transformacao.x, transformacao.y);
+      ctx.scale(transformacao.k, transformacao.k);
+      // desenha as arestas
+      grafo.edges.forEach(link => {
+      // <<<
+        ctx.beginPath();
+        ctx.moveTo(link.source.x, link.source.y);
+        ctx.lineTo(link.target.x, link.target.y);
+        ctx.strokeStyle = "gray";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        if (grafoAtivo === "links") {
+          desenharBolinha(link);
+        }
+      // >>>
+      });
+      // desenha os nós
+      grafo.nodes.forEach(no => {
+      // <<<
+        const estilo = estilosPorTipo[no.kind] || estilosPorTipo.note;
+        ctx.fillStyle = estilo.fill;
+        ctx.beginPath();
+        ctx.arc(no.x, no.y, estilo.raio, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "gray";
+        ctx.lineWidth = 0.5; 
+        ctx.stroke();
+        if (mostrarNomes) {
+          ctx.fillStyle = "#eeeeee";
+              ctx.font = "6px Arial";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "top";
+          ctx.fillText(
+            no.id,
+            no.x,
+            no.y + estilo.raio + 2
+          );
+        }
+      // >>>
+      });
+      // recupera o estado anterior do treco
+      ctx.restore();
+    }
+
+  </script>
+
+</body>
+
