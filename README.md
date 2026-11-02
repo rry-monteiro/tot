@@ -21,6 +21,14 @@ uv tool install .
 
 Isso instala o comando `tot` no seu PATH. Pra atualizar depois de mexer no código: `uv tool install . --force`.
 
+### pip / pipx:
+```bash
+# recomendado (isola o tot num venv próprio)
+pipx install git+https://github.com/rry-monteiro/tot.git
+
+# ou, dentro de um venv seu
+pip install git+https://github.com/rry-monteiro/tot.git
+```
 ---
 
 ## Uso
